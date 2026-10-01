@@ -69,6 +69,7 @@ import {
   FALLBACK_MODELS,
   isOpencodeModelUnusableWithStoredKey,
   modelDisplayName,
+  modelsAfterEmptyOpenCodeDiscovery,
   PREFERRED_MODEL_ORDER,
 } from "./provider-models";
 import {
@@ -2035,6 +2036,13 @@ export class ProviderRuntime implements ProviderPort {
             const sorted = [...models].sort(
               (left, right) => rank(left) - rank(right) || compareModelVersions(left, right),
             );
+            // A successful but empty OpenCode response is no more useful to the picker than a
+            // timeout: it must not erase the built-in free tier on first discovery. Keep the last
+            // known catalog when available, otherwise seed the OpenCode safety net. It is not a
+            // fresh catalog, so callers must not treat it as proof that this process serves it.
+            if (client.provider === "opencode" && sorted.length === 0) {
+              return { provider, models: modelsAfterEmptyOpenCodeDiscovery(previous), fresh: false };
+            }
             return { provider, models: sorted, fresh: true };
           } catch {
             return { provider, models: previous, fresh: false };

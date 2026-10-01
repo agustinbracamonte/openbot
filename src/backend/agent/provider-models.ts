@@ -242,3 +242,11 @@ export const FALLBACK_MODELS: AgentModelOption[] = [
     supportedReasoningEfforts: ["low", "medium", "high", "xhigh", "max"],
   },
 ];
+
+/**
+ * A successful but empty OpenCode response must not erase the user's last catalog, or leave a
+ * first-run picker blank. Seed the currently known free tier only when there is no prior catalog.
+ */
+export function modelsAfterEmptyOpenCodeDiscovery(previous: AgentModelOption[]): AgentModelOption[] {
+  return previous.length ? previous : FALLBACK_MODELS.filter((model) => model.provider === "opencode");
+}

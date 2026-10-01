@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FALLBACK_MODELS } from "./provider-models";
+import { FALLBACK_MODELS, modelsAfterEmptyOpenCodeDiscovery } from "./provider-models";
 
 describe("provider model fallbacks", () => {
   it("keeps the current free OpenCode catalog available when discovery fails", () => {
@@ -13,5 +13,22 @@ describe("provider model fallbacks", () => {
       "opencode/nemotron-3.5-lightning-free",
       "opencode/space-bunny-free",
     ]);
+  });
+
+  it("does not erase OpenCode models when discovery returns an empty catalog", () => {
+    expect(modelsAfterEmptyOpenCodeDiscovery([])).toEqual(
+      FALLBACK_MODELS.filter((model) => model.provider === "opencode"),
+    );
+    const previous = [
+      {
+        provider: "opencode" as const,
+        id: "opencode/previous-free-model",
+        name: "Previously discovered free model",
+        description: "Previously discovered free model.",
+        defaultReasoningEffort: "medium" as const,
+        supportedReasoningEfforts: ["medium" as const],
+      },
+    ];
+    expect(modelsAfterEmptyOpenCodeDiscovery(previous)).toEqual(previous);
   });
 });
