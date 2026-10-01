@@ -107,44 +107,11 @@ export function claudeModelName(id: string): string | null {
   return variant ? `${name} (${variant.toUpperCase()} context)` : name;
 }
 
-export const FALLBACK_MODELS: AgentModelOption[] = [
-  {
-    provider: "codex",
-    id: "gpt-6-luna",
-    name: "GPT-6 Luna",
-    description: "Fast and efficient for everyday agent work.",
-    // `DEFAULT_REASONING_EFFORT`, not the `medium` the Codex CLI reports: this is the model a new
-    // agent starts on, and the two have to say the same thing.
-    defaultReasoningEffort: "low",
-    supportedReasoningEfforts: ["low", "medium", "high", "xhigh", "max"],
-  },
-  {
-    provider: "codex",
-    id: "gpt-5.6-luna",
-    name: "GPT-5.6 Luna",
-    description: "Older fast and efficient model.",
-    defaultReasoningEffort: "medium",
-    supportedReasoningEfforts: ["low", "medium", "high", "xhigh", "max"],
-  },
-  {
-    provider: "codex",
-    id: "gpt-5.6-terra",
-    name: "GPT-5.6 Terra",
-    description: "Balanced speed and capability for involved tasks.",
-    defaultReasoningEffort: "medium",
-    supportedReasoningEfforts: ["low", "medium", "high", "xhigh", "max"],
-  },
-  {
-    provider: "codex",
-    id: "gpt-5.6-sol",
-    name: "GPT-5.6 Sol",
-    description: "Most capable for complex, long-running work.",
-    defaultReasoningEffort: "medium",
-    supportedReasoningEfforts: ["low", "medium", "high", "xhigh", "max"],
-  },
-  // OpenCode can run these without a sign-in. Discovery normally replaces this small safety net
-  // with the CLI's complete, current catalog, but an ACP timeout must not leave the picker empty
-  // on a first run or after OpenBot restarts.
+/**
+ * Known free OpenCode ids are a discovery safety net, not a claim that an unauthenticated provider
+ * is ready. They are inserted only after OpenCode has authenticated and its model discovery fails.
+ */
+export const OPENCODE_FREE_MODEL_FALLBACKS: AgentModelOption[] = [
   {
     provider: "opencode",
     id: "opencode/big-pickle",
@@ -209,6 +176,43 @@ export const FALLBACK_MODELS: AgentModelOption[] = [
     defaultReasoningEffort: "medium",
     supportedReasoningEfforts: ["low", "medium", "high", "xhigh", "max"],
   },
+];
+
+export const FALLBACK_MODELS: AgentModelOption[] = [
+  {
+    provider: "codex",
+    id: "gpt-6-luna",
+    name: "GPT-6 Luna",
+    description: "Fast and efficient for everyday agent work.",
+    // `DEFAULT_REASONING_EFFORT`, not the `medium` the Codex CLI reports: this is the model a new
+    // agent starts on, and the two have to say the same thing.
+    defaultReasoningEffort: "low",
+    supportedReasoningEfforts: ["low", "medium", "high", "xhigh", "max"],
+  },
+  {
+    provider: "codex",
+    id: "gpt-5.6-luna",
+    name: "GPT-5.6 Luna",
+    description: "Older fast and efficient model.",
+    defaultReasoningEffort: "medium",
+    supportedReasoningEfforts: ["low", "medium", "high", "xhigh", "max"],
+  },
+  {
+    provider: "codex",
+    id: "gpt-5.6-terra",
+    name: "GPT-5.6 Terra",
+    description: "Balanced speed and capability for involved tasks.",
+    defaultReasoningEffort: "medium",
+    supportedReasoningEfforts: ["low", "medium", "high", "xhigh", "max"],
+  },
+  {
+    provider: "codex",
+    id: "gpt-5.6-sol",
+    name: "GPT-5.6 Sol",
+    description: "Most capable for complex, long-running work.",
+    defaultReasoningEffort: "medium",
+    supportedReasoningEfforts: ["low", "medium", "high", "xhigh", "max"],
+  },
   {
     provider: "claude",
     id: "claude-opus-5-5",
@@ -244,9 +248,10 @@ export const FALLBACK_MODELS: AgentModelOption[] = [
 ];
 
 /**
- * A successful but empty OpenCode response must not erase the user's last catalog, or leave a
- * first-run picker blank. Seed the currently known free tier only when there is no prior catalog.
+ * An empty or failed OpenCode response must not erase the last catalog, or leave the picker blank
+ * after a successful account check. Keep the safety net out of the initial list so a provider that
+ * explicitly reports sign-in-required does not look connected or usable.
  */
-export function modelsAfterEmptyOpenCodeDiscovery(previous: AgentModelOption[]): AgentModelOption[] {
-  return previous.length ? previous : FALLBACK_MODELS.filter((model) => model.provider === "opencode");
+export function modelsAfterOpenCodeDiscoveryFailure(previous: AgentModelOption[]): AgentModelOption[] {
+  return previous.length ? previous : OPENCODE_FREE_MODEL_FALLBACKS;
 }

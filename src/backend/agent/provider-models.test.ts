@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { FALLBACK_MODELS, modelsAfterEmptyOpenCodeDiscovery } from "./provider-models";
+import { modelsAfterOpenCodeDiscoveryFailure, OPENCODE_FREE_MODEL_FALLBACKS } from "./provider-models";
 
 describe("provider model fallbacks", () => {
   it("keeps the current free OpenCode catalog available when discovery fails", () => {
-    expect(FALLBACK_MODELS.filter((model) => model.provider === "opencode").map((model) => model.id)).toEqual([
+    expect(OPENCODE_FREE_MODEL_FALLBACKS.map((model) => model.id)).toEqual([
       "opencode/big-pickle",
       "opencode/ling-3.0-flash-fin-free",
       "opencode/longcat-2.5-preview-free",
@@ -15,10 +15,8 @@ describe("provider model fallbacks", () => {
     ]);
   });
 
-  it("does not erase OpenCode models when discovery returns an empty catalog", () => {
-    expect(modelsAfterEmptyOpenCodeDiscovery([])).toEqual(
-      FALLBACK_MODELS.filter((model) => model.provider === "opencode"),
-    );
+  it("uses the known free tier when discovery fails before finding any OpenCode models", () => {
+    expect(modelsAfterOpenCodeDiscoveryFailure([])).toEqual(OPENCODE_FREE_MODEL_FALLBACKS);
     const previous = [
       {
         provider: "opencode" as const,
@@ -29,6 +27,6 @@ describe("provider model fallbacks", () => {
         supportedReasoningEfforts: ["medium" as const],
       },
     ];
-    expect(modelsAfterEmptyOpenCodeDiscovery(previous)).toEqual(previous);
+    expect(modelsAfterOpenCodeDiscoveryFailure(previous)).toEqual(previous);
   });
 });
