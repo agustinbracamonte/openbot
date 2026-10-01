@@ -496,10 +496,10 @@ export class AcpAgentClient extends EventEmitter<ClientEvents> {
           try {
             this.#models = await this.#discoverModels(timeoutMs);
           } catch (error) {
-            // Initialization already proved that this catalogue works. A later refresh can time
-            // out while probing model options; keep the last successful list instead of making a
-            // connected provider appear to have no models.
-            if (this.#models.length === 0) throw error;
+            // Initialization already proved that OpenCode's catalogue works. A later refresh can
+            // time out while probing model options; keep the last successful list instead of making
+            // a connected provider appear to have no models. Other providers report the failure.
+            if (this.provider !== "opencode" || this.#models.length === 0) throw error;
           }
         }
         return decoder({
