@@ -1955,16 +1955,15 @@ export class ProviderRuntime implements ProviderPort {
       BUILT_IN_PROVIDER_DRIVERS.map(
         async ({ id: provider }): Promise<{ provider: AgentProvider; models: AgentModelOption[]; fresh: boolean }> => {
           const previous = this.#models.filter((model) => model.provider === provider);
-          const client = this.#clients.get(provider);
-          if (!client) {
-            // A failed account check is different from a failed model-list call: do not present a
-            // provider as usable after it explicitly reported sign-in-required. If a previously
-            // connected provider simply stopped, its last good catalog remains useful.
-            const signedOut = this.#status.providers?.some(
-              (status) => status.id === provider && status.state === "sign-in-required",
-            );
-            return { provider, models: provider === "opencode" && signedOut ? [] : previous, fresh: false };
+          const signedOut = this.#status.providers?.some(
+            (status) => status.id === provider && status.state === "sign-in-required",
+          );
+          if (provider === "opencode" && signedOut) {
+            // Do not expose fallback or stale models when OpenCode reports sign-in-required.
+            return { provider, models: [], fresh: false };
           }
+          const client = this.#clients.get(provider);
+          if (!client) return { provider, models: previous, fresh: false };
           // Read once per pass, not per model: a stored key cannot change inside one refresh, and
           // a model is unusable only because OpenBot is what put that key in the environment.
           const hasStoredKey = Boolean(this.#credentials.apiKey(provider));
