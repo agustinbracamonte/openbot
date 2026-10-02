@@ -315,6 +315,32 @@ describe.sequential("ProviderRuntime: account checks and login", () => {
     expect(service.listModels().filter((model) => model.provider === "opencode")).toEqual([]);
   });
 
+  it("discovers OpenCode models when a reconnect signs in after sign-in-required", async () => {
+    process.env.OPENBOT_OPENCODE_PATH = await createFakeOpencode(root);
+    let opencodeClients = 0;
+    const { service: agentService } = await startService(root, {
+      client: (provider) => {
+        if (provider === "opencode") opencodeClients += 1;
+        return new FakeAgentClient(provider, "DONE", false, provider !== "opencode" || opencodeClients > 1);
+      },
+      preferredProvider: "opencode",
+    });
+    service = agentService;
+    expect(service.getStatus().providers).toContainEqual(
+      expect.objectContaining({ id: "opencode", state: "sign-in-required" }),
+    );
+    await service.connectProvider("opencode", vi.fn());
+    expect(service.getStatus().providers).toContainEqual(
+      expect.objectContaining({ id: "opencode", state: "available" }),
+    );
+    expect(
+      service
+        .listModels()
+        .filter((model) => model.provider === "opencode")
+        .map((model) => model.id),
+    ).toEqual(["opencode/example-model"]);
+  });
+
   it.each(["throws", "returns empty"] as const)(
     "offers the OpenCode free tier when discovery %s after the preferred provider fails to sign in",
     async (discoveryFailure) => {
