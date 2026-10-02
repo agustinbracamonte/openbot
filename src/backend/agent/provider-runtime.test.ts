@@ -419,7 +419,10 @@ describe.sequential("ProviderRuntime: account checks and login", () => {
     });
     const fallback = service.listModels();
     await service.initialize();
-    expect(service.listModels()).toEqual(fallback);
+    const catalog = service.listModels();
+    const byProviderAndId = (models: typeof catalog) =>
+      [...models].sort((left, right) => left.provider.localeCompare(right.provider) || left.id.localeCompare(right.id));
+    expect(byProviderAndId(catalog)).toEqual(byProviderAndId([...fallback, ...OPENCODE_FREE_MODEL_FALLBACKS]));
   });
 
   it.each(["codex", "claude", "grok"] as const)(
