@@ -2049,7 +2049,9 @@ export class ProviderRuntime implements ProviderPort {
             // timeout: it must not erase the built-in free tier on first discovery. Keep the last
             // known catalog when available, otherwise seed the OpenCode safety net. It is not a
             // fresh catalog, so callers must not treat it as proof that this process serves it.
-            if (client.provider === "opencode" && sorted.length === 0) {
+            // A response that the stored-key filter emptied is a real answer: restoring the last
+            // catalog would bring back the models that the key cannot use.
+            if (client.provider === "opencode" && serverModels.size === 0) {
               return { provider, models: modelsAfterOpenCodeDiscoveryFailure(previous), fresh: false };
             }
             return { provider, models: sorted, fresh: true };
